@@ -1727,9 +1727,11 @@ class Solution:
 
 
 ---
-## 常用数据结构
 
-## 前缀和
+
+# 常用数据结构
+
+## 一、前缀和
 
 ### 原理
 
@@ -1873,9 +1875,29 @@ class Solution:
         return -1 if res >= n else res
 ```
 
+## 二、差分数组
 
+- 当遇到对**连续子数组**进行**同一**操作时可以考虑，除此之外连续子数组也要想到**滑动窗口**。
+- [灵神的题单](https://leetcode.cn/circle/discuss/FfMCgb/)
 
-## 单调栈
+$$
+d(i) = \left\{
+\begin{aligned}
+a[0], \quad&i = 0 \\
+a[i] - a[i-1], \quad&i > 0
+\end{aligned}
+\right.
+$$
+
+- 性质1: 累加可得原数组a
+- 性质2:
+  - 将$a[i], a[i+1], ...a[j]$加上x
+  - 等价于$a[i]$加x，$a[j+1]$减x
+    - 如果$j + 1 > n$，则不用操作
+
+## 三、栈
+
+### 单调栈
 
 - 单调栈用于处理寻找下一个比其更小或更大的元素
 
@@ -1971,25 +1993,227 @@ public:
 };
 ```
 
----
 
-## 差分数组
-- 当遇到对**连续子数组**进行**同一**操作时可以考虑，除此之外连续子数组也要想到**滑动窗口**。
-- [灵神的题单](https://leetcode.cn/circle/discuss/FfMCgb/)
 
-$$
-d(i) = \left\{
-\begin{aligned}
-a[0], \quad&i = 0 \\
-a[i] - a[i-1], \quad&i > 0
-\end{aligned}
-\right.
-$$
-- 性质1: 累加可得原数组a
-- 性质2:
-    - 将$a[i], a[i+1], ...a[j]$加上x
-    - 等价于$a[i]$加x，$a[j+1]$减x
-        - 如果$j + 1 > n$，则不用操作
+## 四、队列
+
+### 单调队列
+
+- 与单调栈思路相似
+
+#### 239 滑动窗口最大值
+
+> 给你一个整数数组 `nums`，有一个大小为 `k` 的滑动窗口从数组的最左侧移动到数组的最右侧。你只可以看到在滑动窗口内的 `k` 个数字。滑动窗口每次只向右移动一位。
+>
+> 返回 *滑动窗口中的最大值* 。
+
+- 在一个窗口中，当我们遇到一个比单调队列尾部更大的数时，我们将单调队列尾部的数移除。这是因为后续这个尾部的数不会在是任何窗口的最大值了。
+- 于是我们维护了一个单调递减的单调队列。
+
+```python
+class Solution:
+    def maxSlidingWindow(self, nums: List[int], k: int) -> List[int]:
+        dq = deque()
+        res = []
+        for i in range(k):
+            while dq and nums[dq[-1]]<= nums[i]:
+                dq.pop()
+            dq.append(i)
+        res.append(nums[dq[0]])
+        n = len(nums)
+        for i in range(k, n):
+            if i - dq[0] + 1 > k:
+                dq.popleft()
+            while dq and nums[dq[-1]] <= nums[i]:
+                dq.pop()
+            dq.append(i)
+            res.append(nums[dq[0]])
+        return res
+```
+
+
+
+
+
+## 六、字典树Trie
+
+### 基础
+
+```python
+class Trie:
+
+    class TrieNode:
+        def __init__(self, isWord: bool):
+            self.isWord = isWord
+            self.children = {}
+        
+        def goDown(self, c) -> Optional["TrieNode"]:
+            if c not in self.children:
+                return None
+            return self.children[c]
+
+        def goDownandCreate(self, c, isWord) -> "TrieNode":
+            if c not in self.children:
+                self.children[c] = Trie.TrieNode(isWord)
+            if isWord:
+                self.children[c].isWord = isWord
+            return self.children[c]
+
+    def __init__(self):
+        self.root = self.TrieNode(False)
+
+    def insert(self, word: str) -> None:
+        n = len(word)
+        node = self.root
+        for i in range(n - 1):
+            node = node.goDownandCreate(word[i], False)
+        node = node.goDownandCreate(word[n - 1], True)
+
+    def search(self, word: str) -> bool:
+        node = self.root
+        for c in word:
+            node = node.goDown(c)
+            if node is None:
+                return False  
+        return node.isWord
+
+    def startsWith(self, prefix: str) -> bool:
+        node = self.root
+        for c in prefix:
+            node = node.goDown(c)
+            if node is None:
+                return False
+        return True
+
+# Your Trie object will be instantiated and called as such:
+# obj = Trie()
+# obj.insert(word)
+# param_2 = obj.search(word)
+# param_3 = obj.startsWith(prefix)
+```
+
+### 进阶
+
+- 基本就是`TrieNode`中存储的特征变了
+
+#### 3093 最长公共后缀查询（2118）
+
+> 给你两个字符串数组 `wordsContainer` 和 `wordsQuery` 。
+>
+> 对于每个 `wordsQuery[i]` ，你需要从 `wordsContainer` 中找到一个与 `wordsQuery[i]` 有 **最长公共后缀** 的字符串。如果 `wordsContainer` 中有两个或者更多字符串有最长公共后缀，那么答案为长度 **最短** 的。如果有超过两个字符串有 **相同** 最短长度，那么答案为它们在 `wordsContainer` 中出现 **更早** 的一个。
+>
+> 请你返回一个整数数组 `ans` ，其中 `ans[i]`是 `wordsContainer`中与 `wordsQuery[i]` 有 **最长公共后缀** 字符串的下标。
+
+- 出现更早只需要正向遍历即可满足，我们在`TrieNode`中记录长度和索引
+
+```python
+class TrieNode:
+    def __init__(self):
+        self.word_i = inf
+        # len(word)
+        self.word_l = inf
+        self.children = {}
+
+    def goDownandCreate(self, c: str, word_i: int, word_l: int) -> "TrieNode":
+        if c not in self.children:
+            self.children[c] = TrieNode()
+        if word_l < self.children[c].word_l:
+            self.children[c].word_i = word_i
+            self.children[c].word_l = word_l
+        return self.children[c]
+
+    def goDown(self, c: str) -> Optional["TrieNode"]:
+        if c not in self.children:
+            return None
+        return self.children[c]
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+    
+    def insert(self, word: str, word_i: int) -> None:
+        node = self.root
+        n = len(word)
+        if n < node.word_l:
+            node.word_l = n
+            node.word_i = word_i
+        # 最长后缀, 所以反向插入
+        for i in range(n - 1, -1, -1):
+            node = node.goDownandCreate(word[i], word_i, n)
+    
+    def searchSuffix(self, word: str) -> int:
+        node = self.root
+        for s in reversed(word):
+            tmp = node.goDown(s)
+            if tmp is None:
+                return node.word_i
+            node = tmp
+        return node.word_i
+
+class Solution:
+    def stringIndices(self, wordsContainer: List[str], wordsQuery: List[str]) -> List[int]:
+        trie = Trie()
+        for i, s in enumerate(wordsContainer):
+            trie.insert(s, i)
+        ans = [0] * (len(wordsQuery))
+        for i, query in enumerate(wordsQuery):
+            ans[i] = trie.searchSuffix(query)
+        return ans
+```
+
+
+
+## 七、并查集
+
+### 模板
+
+```python
+class UFSet:
+    def __init__(self, n: int):
+        self.parent = list(range(n))
+        self.ranks = [0] * n
+
+    def find(self, x: int) -> int:
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x: int, y: int) -> None:
+        a, b = self.find(x), self.find(y)
+        if a != b:
+            if self.ranks[a] < self.ranks[b]:
+                self.parent[a] = b
+            elif self.ranks[a] > self.ranks[b]:
+                self.parent[b] = a
+            else:
+                self.parent[b] = a
+                self.ranks[a] += 1
+```
+
+
+
+### 基础
+
+#### 990 等式方程的可满足性 
+
+> - `a==b` `b!=a` 不满足
+> - `a==b` `b==c` `a!=c` 不满足
+
+```python
+class Solution:
+    def equationsPossible(self, equations: List[str]) -> bool:
+        us = UFSet(26)
+        for e in equations:
+            if e[1] == '=':
+                us.union(ord(e[0]) - ord('a'), ord(e[3]) - ord('a'))
+        for e in equations:
+            if e[1] == '!':
+                if us.find(ord(e[0]) - ord('a')) == us.find(ord(e[3]) - ord('a')):
+                    return False
+        return True
+```
+
+
 
 ---
 
