@@ -2033,6 +2033,81 @@ class Solution:
 
 
 
+#### 1499 满足不等式的最大值（2456）
+
+> 给你一个数组 `points` 和一个整数 `k` 。数组中每个元素都表示二维平面上的点的坐标，并按照横坐标 x 的值从小到大排序。也就是说 `points[i] = [xi, yi]` ，并且在 `1 <= i < j <= points.length` 的前提下， `xi < xj` 总成立。
+>
+> 请你找出 `yi + yj + |xi - xj|` 的 **最大值**，其中 `|xi - xj| <= k` 且 `1 <= i < j <= points.length`。
+>
+> 题目测试数据保证至少存在一对能够满足 `|xi - xj| <= k` 的点。
+
+- 如果当前点相比之前的点可以构成更大的值，那么就将之前的点去掉
+- 如果当前点相比最早的点已经差大于k，则去掉最早的点
+- 两端操作=>单调双端队列
+
+```python
+class Solution:
+    def findMaxValueOfEquation(self, points: List[List[int]], k: int) -> int:
+        dq = deque()
+        res = -inf
+        for [x, y] in points:
+            while dq and x - dq[0][0] > k:
+                dq.popleft()
+            if dq:
+                res = max(res, x + y + dq[0][1] - dq[0][0])
+            while dq and y - dq[-1][1] >= x - dq[-1][0]:
+                dq.pop()
+            dq.append((x, y))
+        return res
+```
+
+### 单调队列优化DP
+
+#### 1696 跳跃游戏VI（1954）
+
+> 给你一个下标从 **0** 开始的整数数组 `nums` 和一个整数 `k` 。
+>
+> 一开始你在下标 `0` 处。每一步，你最多可以往前跳 `k` 步，但你不能跳出数组的边界。也就是说，你可以从下标 `i` 跳到 `[i + 1， min(n - 1, i + k)]` **包含** 两个端点的任意位置。
+>
+> 你的目标是到达数组最后一个位置（下标为 `n - 1` ），你的 **得分** 为经过的所有数字之和。
+>
+> 请你返回你能得到的 **最大得分** 
+
+- 记忆化$O(n^2)$
+- 我们思考对于当前项的前k项，我们只需要其中最大的=>`Leetcode239 滑动窗口的最大值`=>单调队列
+
+```python
+class Solution:
+    def maxResult(self, nums: List[int], k: int) -> int:
+        n = len(nums)
+        dp = [0] * n
+        dq = deque()
+        for i in range(n):
+            while dq and i - dq[0] > k:
+                dq.popleft()
+            dp[i] = nums[i] + (dp[dq[0]] if dq else 0)
+            while dq and dp[i] > dp[dq[-1]]:
+                dq.pop()
+            dq.append(i)
+        return dp[-1]
+```
+
+
+
+## 五、堆
+
+### 基础
+
+- minheap
+- `heapify(list)`
+- `heappush(heap, elem)`
+- `heappop(heap)`
+- `nlargest(k, heap)`/`nsmallest(k, heap)`
+
+
+
+
+
 
 
 ## 六、字典树Trie
