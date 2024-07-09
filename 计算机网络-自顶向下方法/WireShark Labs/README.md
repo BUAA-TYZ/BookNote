@@ -247,7 +247,7 @@ If you have been able to create your own trace, answer the following question:
 分析-启用的协议中 uncheck the HTTP box，随后**关注端口 61888**
 
 4. What is the sequence number of the TCP SYN segment that is used to initiate the  TCP connection between the client computer and gaia.cs.umass.edu? What is it  in the segment that identifies the segment as a SYN segment? 
-   - 66677051
+   - 66677051 （随机序号）
    - Flags： 0x002
 
 5. What is the sequence number of the SYNACK segment sent by gaia.cs.umass.edu  to the client computer in reply to the SYN? What is the value of the  Acknowledgement field in the SYNACK segment? How did gaia.cs.umass.edu  determine that value? What is it in the segment that identifies the segment as a  SYNACK segment? 
@@ -262,14 +262,43 @@ If you have been able to create your own trace, answer the following question:
 
    >  Note: Wireshark has a nice feature that allows you to plot the RTT for  each of the TCP segments sent. Select a TCP segment in the “listing of  captured packets” window that is being sent from the client to the  gaia.cs.umass.edu server. Then select: Statistics->TCP Stream Graph- >Round Trip Time Graph. 
 
-   - 
+   - 前六个报文段
+     1. 发出 POST 请求：序号 66677052 确认号 3745466776
+     2. 剩余 5 个全部是发送数据的报文段 且确认号与第一个一致，序号依次为 第一个的序号 + 1460（单个TCP报文段携带的最大长度为 1460）
+   - 记录的是相对时间，TCP流的第一帧为0。
+   - 分别为 0.225636s | 剩余的全部为 0.225729s
+   - 在 0.465259s 被接收到（第一个 ACK 号大于第六个的序号的包） 
+   - 对于 RTT，这里是累积确认，所以没法计算，将范围扩大
+   - RTT 分别大约为为 239，233，226，271，241，237...ms
+   - ![](./Ref/tcp_1.png)
+   - EstimatedRTT = （1 - a） • EstimatedRTT + a • SampleRTT
+   - 估计的 RTT 依次为 239（实际 233），238.25（实际 226），236.72（实际 271），241（实际 241），241（实际 237），240.5ms
 
 8. What is the length of each of the first six TCP segments?
 
 9. What is the minimum amount of available buffer space advertised at the received  for the entire trace? Does the lack of receiver buffer space ever throttle the  sender? 
 
+   - 窗口始终足够
+   - 事实上，即窗口为 0 ，发送方也不会阻塞，而是持续发送 1 个字节的报文来等待接收方回传 ACK 通知接收窗口的改变
+
 10. Are there any retransmitted segments in the trace file? What did you check for (in  the trace) in order to answer this question? 
 
 11. How much data does the receiver typically acknowledge in an ACK? Can you  identify cases where the receiver is ACKing every other received segment (see  Table 3.2 on page 250 in the text). 
 
+    - 153076 bytes（略大于实际大小 152138 bytes）
+
 12. What is the throughput (bytes transferred per unit time) for the TCP connection?  Explain how you calculated this value.
+
+    - 153076 * 8 / 1.2 = 1Mbps
+    - bps 指的是 比特每秒，常说的 1Mbps 即 125 KB/s
+
+13. Use the Time-Sequence-Graph(Stevens) plotting tool to view the sequence  number versus time plot of segments being sent from the client to the  gaia.cs.umass.edu server. Can you identify where TCP’s slowstart phase begins  and ends, and where congestion avoidance takes over? Comment on ways in  which the measured data differs from the idealized behavior of TCP that we’ve  studied in the text.
+
+    - ![](./Ref/tcp_2.png)
+    - 大约 0.1s 开始拥塞避免
+    - 与理想的 TCP 有些许不同，这里慢启动到达拥塞避免过程中的阈值一开始是一个固定的值，而书上的说法是 先用一次慢启动直到超时，将这个值设为阈值
+
+14. Answer each of two questions above for the trace that you have gathered when  you transferred a file from your computer to gaia.cs.umass.edu
+
+    - ![](./Ref/tcp_3.png)
+    - 可以看到序号的量两倍的上涨，直到大约0.7s 之后开始拥塞避免
