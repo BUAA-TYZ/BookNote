@@ -1,5 +1,6 @@
 package store;
 
+import ingredient.ChicagoIngredientFactory;
 import pojo.*;
 
 public class ChicagoPizzaStore extends PizzaStore {
@@ -8,7 +9,7 @@ public class ChicagoPizzaStore extends PizzaStore {
     Pizza createPizza(String type) {
         Pizza pizza = null;
         if (type.equals("cheese")) {
-            pizza = new ChicagoCheesePizza();
+            pizza = new ChicagoCheesePizza(new ChicagoIngredientFactory());
         } else if (type.equals("greek")) {
             pizza = new ChicagoGreekePizza();
         } else if (type.equals("pepperoni")) {

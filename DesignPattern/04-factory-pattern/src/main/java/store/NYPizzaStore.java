@@ -1,5 +1,6 @@
 package store;
 
+import ingredient.NYIngredientFactory;
 import pojo.NYCheesePizza;
 import pojo.NYGreekePizza;
 import pojo.NYPepperoniPizza;
@@ -11,7 +12,7 @@ public class NYPizzaStore extends PizzaStore {
     Pizza createPizza(String type) {
         Pizza pizza = null;
         if (type.equals("cheese")) {
-            pizza = new NYCheesePizza();
+            pizza = new NYCheesePizza(new NYIngredientFactory());
         } else if (type.equals("greek")) {
             pizza = new NYGreekePizza();
         } else if (type.equals("pepperoni")) {
