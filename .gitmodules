@@ -1,3 +1,3 @@
 [submodule "Vue"]
 	path = Vue
-	url = ./Vue/.git
+	url = https://github.com/BUAA-TYZ/Learn-Vue.git
