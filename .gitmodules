@@ -1,0 +1,3 @@
+[submodule "Vue"]
+	path = Vue
+	url = ./Vue/.git
